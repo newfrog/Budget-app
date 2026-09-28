@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>30-Day Cash Flow & Trajectory Planner</title>
+  
+  <!-- Chart.js CDN for clean, responsive line graph -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
     :root {
       --bg: #0b1329;
@@ -118,10 +122,31 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      margin-bottom: 24px;
+      margin-bottom: 20px;
     }
 
     .balance-input-group { display: flex; align-items: center; gap: 8px; }
+
+    /* Chart Section */
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chart-header h2 { font-size: 1.15rem; font-weight: 600; }
+    .chart-wrapper { position: relative; width: 100%; height: 260px; }
 
     .dashboard-grid {
       display: grid;
@@ -285,6 +310,17 @@
       <span>$</span>
       <input type="number" id="current-balance" step="0.01" style="width: 140px; font-size: 1rem; font-weight: 700;">
       <button type="button" class="btn-primary" onclick="updateStartingBalance()">Update</button>
+    </div>
+  </div>
+
+  <!-- 30-Day Trajectory Graph with X-Axis at $0 -->
+  <div class="chart-card">
+    <div class="chart-header">
+      <h2>30-Day Projected Account Balance</h2>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Baseline dotted line represents <strong>$0.00</strong></span>
+    </div>
+    <div class="chart-wrapper">
+      <canvas id="trajectoryChart"></canvas>
     </div>
   </div>
 
@@ -453,6 +489,7 @@
     { id: 'i3', name: "Wife's Job 2 (Monthly)", amount: 950, frequency: 'monthly', day: 5 }
   ];
 
+  // Preserved exact localStorage keys
   let currentChecking = parseFloat(localStorage.getItem('budget_balance')) || 1200.00;
   let bills = JSON.parse(localStorage.getItem('budget_bills_v6')) || defaultBills;
   let incomes = JSON.parse(localStorage.getItem('budget_incomes_v6')) || defaultIncomes;
@@ -471,6 +508,7 @@
   document.getElementById('cycle-label').textContent = `Today: ${monthNames[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()} • 30-Day Rolling Timeline`;
 
   let currentImportTab = 'bills';
+  let trajectoryChartInstance = null;
 
   function openImportModal() {
     document.getElementById('import-modal').style.display = 'flex';
@@ -513,7 +551,6 @@
       const parts = line.split('\t').map(p => p.trim());
       if (parts.length < 3) return;
 
-      // Skip header row if copied
       if (parts[0].toLowerCase() === 'name') return;
 
       const name = parts[0];
@@ -846,6 +883,95 @@
     `;
   }
 
+  // Update or render the Chart.js line graph
+  function renderTrajectoryChart(timelineLabels, timelineBalances, anyDeficit) {
+    const ctx = document.getElementById('trajectoryChart').getContext('2d');
+
+    const primaryColor = anyDeficit ? '#ef4444' : '#38bdf8';
+    const bgGradient = ctx.createLinearGradient(0, 0, 0, 240);
+    if (anyDeficit) {
+      bgGradient.addColorStop(0, 'rgba(239, 68, 68, 0.35)');
+      bgGradient.addColorStop(1, 'rgba(239, 68, 68, 0.0)');
+    } else {
+      bgGradient.addColorStop(0, 'rgba(56, 189, 248, 0.35)');
+      bgGradient.addColorStop(1, 'rgba(56, 189, 248, 0.0)');
+    }
+
+    if (trajectoryChartInstance) {
+      trajectoryChartInstance.data.labels = timelineLabels;
+      trajectoryChartInstance.data.datasets[0].data = timelineBalances;
+      trajectoryChartInstance.data.datasets[0].borderColor = primaryColor;
+      trajectoryChartInstance.data.datasets[0].backgroundColor = bgGradient;
+      trajectoryChartInstance.update();
+      return;
+    }
+
+    trajectoryChartInstance = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: timelineLabels,
+        datasets: [{
+          label: 'Projected Balance',
+          data: timelineBalances,
+          borderColor: primaryColor,
+          backgroundColor: bgGradient,
+          borderWidth: 2.5,
+          tension: 0.25,
+          fill: true,
+          pointRadius: 2,
+          pointHoverRadius: 6,
+          pointHoverBackgroundColor: '#f8fafc'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { intersect: false, mode: 'index' },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#1e293b',
+            titleColor: '#f8fafc',
+            bodyColor: '#38bdf8',
+            borderColor: '#334155',
+            borderWidth: 1,
+            padding: 10,
+            callbacks: {
+              label: function(context) {
+                return ` Balance: ${formatCurrency(context.parsed.y)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+            ticks: { color: '#94a3b8', font: { size: 10 }, maxTicksLimit: 10 }
+          },
+          y: {
+            grid: {
+              color: function(context) {
+                // Emphasize the X-Axis where Y = 0 with a bright dashed line
+                if (context.tick.value === 0) return 'rgba(239, 68, 68, 0.85)';
+                return 'rgba(51, 65, 85, 0.3)';
+              },
+              lineWidth: function(context) {
+                return context.tick.value === 0 ? 2 : 1;
+              }
+            },
+            ticks: {
+              color: '#94a3b8',
+              font: { size: 10 },
+              callback: function(value) {
+                return formatCurrency(value);
+              }
+            }
+          }
+        }
+      }
+    });
+  }
+
   function render() {
     const allBills = generateOccurrences(bills, true);
     const allIncomes = generateOccurrences(incomes, false);
@@ -917,9 +1043,13 @@
     endEl.textContent = formatCurrency(projectedFinal);
     endEl.className = projectedFinal < 0 ? 'kpi-value negative' : 'kpi-value positive';
 
+    // 30-Day Line Graph Simulation
     let runningBalance = currentChecking;
     let lowestBalance = runningBalance;
     let deficitDay = null;
+
+    const timelineLabels = [];
+    const timelineBalances = [];
 
     for (let dayOffset = 0; dayOffset <= 30; dayOffset++) {
       const simDate = new Date(today);
@@ -934,6 +1064,9 @@
         if (b.dateISO === simISO) runningBalance -= b.amount;
       });
 
+      timelineLabels.push(dayOffset === 0 ? 'Today' : formatDateStr(simDate));
+      timelineBalances.push(Math.round(runningBalance * 100) / 100);
+
       if (runningBalance < lowestBalance) {
         lowestBalance = runningBalance;
         if (runningBalance < 0 && deficitDay === null) {
@@ -945,6 +1078,8 @@
         }
       }
     }
+
+    renderTrajectoryChart(timelineLabels, timelineBalances, lowestBalance < 0);
 
     const banner = document.getElementById('trajectory-banner');
     const bannerText = document.getElementById('trajectory-text');
