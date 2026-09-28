@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cash Flow & Trajectory Planner</title>
+  <title>30-Day Cash Flow & Trajectory Planner</title>
   <style>
     :root {
       --bg: #0b1329;
@@ -38,6 +38,11 @@
     }
 
     header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
       margin-bottom: 20px;
     }
 
@@ -49,6 +54,23 @@
     header p {
       color: var(--text-muted);
       font-size: 0.9rem;
+    }
+
+    .btn-reset-cycle {
+      background: transparent;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-reset-cycle:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-main);
+      border-color: var(--accent-blue);
     }
 
     /* Trajectory Alert Banner */
@@ -92,7 +114,6 @@
       padding: 18px;
       display: flex;
       flex-direction: column;
-      position: relative;
     }
 
     .kpi-label {
@@ -118,7 +139,7 @@
     .positive { color: var(--accent-green); }
     .negative { color: var(--accent-red); }
 
-    /* Starting Balance Control */
+    /* Account Balance Bar */
     .balance-bar {
       background: var(--card-bg);
       border: 1px solid var(--card-border);
@@ -138,7 +159,7 @@
       gap: 8px;
     }
 
-    /* Grid Layout */
+    /* Dashboard Layout */
     .dashboard-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -172,11 +193,41 @@
     }
 
     /* Forms */
-    .entry-form {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr 0.8fr auto;
-      gap: 8px;
+    .entry-form-container {
+      background: rgba(11, 19, 41, 0.4);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
       margin-bottom: 16px;
+    }
+
+    .entry-fields {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1.1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .timing-inputs {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .timing-inputs input, .timing-inputs select {
+      flex: 1;
+    }
+
+    @media (max-width: 520px) {
+      .entry-fields { grid-template-columns: 1fr; }
+      .timing-inputs { flex-direction: column; }
+    }
+
+    .entry-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
     }
 
     input, select {
@@ -204,7 +255,7 @@
     .btn-primary {
       background: var(--accent-blue);
       color: #0b1329;
-      padding: 8px 12px;
+      padding: 7px 14px;
       font-size: 0.85rem;
     }
 
@@ -212,20 +263,22 @@
       background: transparent;
       color: #64748b;
       font-size: 1.1rem;
-      padding: 4px;
+      padding: 4px 6px;
+      border-radius: 4px;
     }
 
     .btn-delete:hover {
       color: var(--accent-red);
+      background: rgba(239, 68, 68, 0.1);
     }
 
-    /* Status Sections & Cards */
+    /* Subheadings & Lists */
     .subheading {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
-      margin: 12px 0 6px 0;
+      margin: 14px 0 6px 0;
       font-weight: 700;
     }
 
@@ -245,7 +298,7 @@
       border: 1px solid rgba(51, 65, 85, 0.4);
       padding: 10px 12px;
       border-radius: 8px;
-      transition: border-color 0.2s;
+      transition: all 0.15s ease;
     }
 
     .item-row.due-soon {
@@ -253,11 +306,17 @@
     }
 
     .item-row.cleared {
-      opacity: 0.55;
+      opacity: 0.5;
     }
 
     .item-row.cleared .item-name {
       text-decoration: line-through;
+    }
+
+    .item-row.off-cycle {
+      opacity: 0.45;
+      background: rgba(11, 19, 41, 0.35);
+      border-style: dashed;
     }
 
     .item-info {
@@ -267,8 +326,8 @@
     }
 
     .item-checkbox {
-      width: 17px;
-      height: 17px;
+      width: 18px;
+      height: 18px;
       cursor: pointer;
       accent-color: var(--accent-green);
     }
@@ -281,6 +340,9 @@
     .item-name {
       font-size: 0.9rem;
       font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
 
     .item-tag {
@@ -292,10 +354,25 @@
       background: rgba(245, 158, 11, 0.2);
       color: var(--accent-amber);
       font-size: 0.7rem;
-      padding: 2px 6px;
+      padding: 1px 6px;
       border-radius: 4px;
       font-weight: 600;
-      margin-left: 4px;
+    }
+
+    .badge-frequency {
+      color: var(--accent-blue);
+      font-size: 0.72rem;
+      background: rgba(56, 189, 248, 0.15);
+      padding: 1px 5px;
+      border-radius: 4px;
+    }
+
+    .badge-offcycle {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      background: rgba(148, 163, 184, 0.15);
+      padding: 1px 5px;
+      border-radius: 4px;
     }
 
     .item-actions {
@@ -321,8 +398,13 @@
 
 <div class="container">
   <header>
-    <h1>30-Day Cash Flow & Bill Trajectory</h1>
-    <p>Track what's cleared, what's due soon, and detect upcoming account deficits before they hit.</p>
+    <div>
+      <h1>30-Day Cash Flow & Trajectory</h1>
+      <p id="cycle-label">30-day forward timeline.</p>
+    </div>
+    <button class="btn-reset-cycle" onclick="manualCycleReset()" title="Reset monthly items for current month">
+      ↺ Reset Month Cycle
+    </button>
   </header>
 
   <!-- Real-Time Trajectory Alert -->
@@ -330,20 +412,20 @@
     <span id="trajectory-text">Trajectory looking healthy. No deficits projected within the next 30 days.</span>
   </div>
 
-  <!-- Account Balance Top-Bar -->
+  <!-- Checking Balance Bar -->
   <div class="balance-bar">
     <div>
-      <strong>Current Checking Account Balance</strong>
-      <div style="font-size: 0.8rem; color: var(--text-muted);">Real-time starting cash in checking today</div>
+      <strong>Current Checking Balance</strong>
+      <div style="font-size: 0.8rem; color: var(--text-muted);">Real-time cash in checking today</div>
     </div>
     <div class="balance-input-group">
       <span>$</span>
       <input type="number" id="current-balance" step="0.01" style="width: 140px; font-size: 1rem; font-weight: 700;">
-      <button class="btn-primary" onclick="updateStartingBalance()">Update</button>
+      <button type="button" class="btn-primary" onclick="updateStartingBalance()">Update</button>
     </div>
   </div>
 
-  <!-- KPI Metrics -->
+  <!-- Metric Overview -->
   <div class="summary-grid">
     <div class="kpi-card">
       <div class="kpi-label">Upcoming Bills (Next 7 Days)</div>
@@ -351,12 +433,12 @@
       <div class="kpi-subtext" id="kpi-due-soon-count">0 bills imminent</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Total Outgoing (Remaining)</div>
+      <div class="kpi-label">Total Outgoing (Next 30 Days)</div>
       <div class="kpi-value negative" id="kpi-unpaid-bills">$0.00</div>
-      <div class="kpi-subtext">Uncleared bills in 30-day cycle</div>
+      <div class="kpi-subtext">Uncleared bills in 30d window</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Expected Inflow (Remaining)</div>
+      <div class="kpi-label">Expected Inflow (Next 30 Days)</div>
       <div class="kpi-value" id="kpi-unpaid-income" style="color: var(--accent-blue);">$0.00</div>
       <div class="kpi-subtext">Uncleared paychecks coming</div>
     </div>
@@ -367,7 +449,7 @@
     </div>
   </div>
 
-  <!-- Interactive Lists -->
+  <!-- Main Grid -->
   <div class="dashboard-grid">
     <!-- Bills Column -->
     <div class="section-card">
@@ -376,38 +458,76 @@
         <span style="font-size: 0.8rem; color: var(--text-muted);">Check off when cleared</span>
       </div>
 
-      <form class="entry-form" id="bill-form">
-        <input type="text" id="bill-name" placeholder="Bill Name" required>
-        <input type="number" id="bill-amount" placeholder="Amount ($)" step="0.01" min="0" required>
-        <input type="number" id="bill-day" placeholder="Day (1-31)" min="1" max="31" required>
-        <button type="submit" class="btn-primary">+ Add</button>
-      </form>
+      <div class="entry-form-container">
+        <div class="entry-fields">
+          <input type="text" id="bill-name" placeholder="Bill Name (e.g. Electric)" autocomplete="off">
+          <input type="number" id="bill-amount" placeholder="Amount ($)" step="0.01" min="0">
+          <select id="bill-frequency" onchange="toggleBillFrequencyInputs()">
+            <option value="monthly">Every Month</option>
+            <option value="every_other">Every Other Month</option>
+            <option value="once">One-Time Only</option>
+          </select>
+        </div>
+        <div class="timing-inputs">
+          <input type="number" id="bill-day" placeholder="Due Day of Month (1-31)" min="1" max="31">
+          <select id="bill-cycle-parity" style="display: none;">
+            <option value="odd">Odd Months (Jan, Mar, May, Jul, Sep, Nov)</option>
+            <option value="even">Even Months (Feb, Apr, Jun, Aug, Oct, Dec)</option>
+          </select>
+        </div>
+        <div class="entry-actions">
+          <button type="button" class="btn-primary" onclick="handleAddBill()">+ Add Bill</button>
+        </div>
+      </div>
 
       <div class="subheading">Due in the Next 7 Days</div>
       <ul class="item-list" id="bills-due-soon"></ul>
 
-      <div class="subheading">Upcoming Later This Month</div>
+      <div class="subheading">Upcoming Later in 30-Day Window</div>
       <ul class="item-list" id="bills-upcoming"></ul>
 
       <div class="subheading">Already Paid / Cleared</div>
       <ul class="item-list" id="bills-cleared"></ul>
+
+      <div class="subheading">Off-Cycle (Not Due in Current 30d)</div>
+      <ul class="item-list" id="bills-offcycle"></ul>
     </div>
 
-    <!-- Incomes Column -->
+    <!-- Income Column -->
     <div class="section-card">
       <div class="section-header">
         <h2>Paychecks & Inflows</h2>
         <span style="font-size: 0.8rem; color: var(--text-muted);">Check off when deposited</span>
       </div>
 
-      <form class="entry-form" id="income-form">
-        <input type="text" id="income-name" placeholder="Income Source" required>
-        <input type="number" id="income-amount" placeholder="Amount ($)" step="0.01" min="0" required>
-        <input type="number" id="income-day" placeholder="Day (1-31)" min="1" max="31" required>
-        <button type="submit" class="btn-primary">+ Add</button>
-      </form>
+      <div class="entry-form-container">
+        <div class="entry-fields">
+          <input type="text" id="income-name" placeholder="Income Name (e.g. My Job)" autocomplete="off">
+          <input type="number" id="income-amount" placeholder="Amount per pay ($)" step="0.01" min="0">
+          <select id="income-frequency" onchange="toggleIncomeFrequencyInputs()">
+            <option value="biweekly">Every 2 Weeks (Bi-Weekly)</option>
+            <option value="monthly">Monthly on Specific Day</option>
+            <option value="once">One-Time Only</option>
+          </select>
+        </div>
+        <div class="timing-inputs">
+          <!-- Shown for Bi-Weekly -->
+          <div id="income-biweekly-wrap" style="width: 100%; display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;">Anchor Pay Date:</label>
+            <input type="date" id="income-anchor-date" style="flex: 1;">
+          </div>
+          <!-- Shown for Monthly -->
+          <input type="number" id="income-day" placeholder="Deposit Day of Month (e.g. 5)" min="1" max="31" style="display: none;">
+        </div>
+        <div class="entry-actions">
+          <button type="button" class="btn-primary" onclick="handleAddIncome()">+ Add Paycheck</button>
+        </div>
+      </div>
 
-      <div class="subheading">Expected Deposits</div>
+      <div class="subheading">Deposits in Next 7 Days</div>
+      <ul class="item-list" id="income-due-soon"></ul>
+
+      <div class="subheading">Upcoming Later in 30-Day Window</div>
       <ul class="item-list" id="income-pending"></ul>
 
       <div class="subheading">Already Deposited / Cleared</div>
@@ -417,37 +537,99 @@
 </div>
 
 <script>
-  const today = new Date();
-  const currentDay = today.getDate();
+  // Anchor date logic using zero-hour local dates
+  function getTodayDate() {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
 
-  // Initial defaults
+  const today = getTodayDate();
+  const currentMonthYear = `${today.getFullYear()}-${today.getMonth() + 1}`;
+
+  // Default seed data with realistic multi-job setup
   const defaultBills = [
-    { id: 'b1', name: 'Credit Card Minimum', amount: 350, day: (currentDay + 2) > 28 ? 3 : currentDay + 2, cleared: false },
-    { id: 'b2', name: 'Electric & Utility', amount: 220, day: (currentDay + 5) > 28 ? 6 : currentDay + 5, cleared: false },
-    { id: 'b3', name: 'Rent / Mortgage', amount: 1400, day: 1, cleared: currentDay > 1 },
-    { id: 'b4', name: 'Personal Loan', amount: 250, day: 15, cleared: currentDay > 15 },
-    { id: 'b5', name: 'Vehicle Loan', amount: 380, day: 20, cleared: currentDay > 20 }
+    { id: 'b1', name: 'Credit Card Minimum', amount: 350, frequency: 'monthly', day: 3, parity: 'odd' },
+    { id: 'b2', name: 'Water & Trash Utility', amount: 160, frequency: 'every_other', day: 15, parity: ((today.getMonth() + 1) % 2 !== 0) ? 'odd' : 'even' },
+    { id: 'b3', name: 'Electric Bill', amount: 220, frequency: 'monthly', day: 6, parity: 'odd' },
+    { id: 'b4', name: 'Rent / Mortgage', amount: 1400, frequency: 'monthly', day: 1, parity: 'odd' },
+    { id: 'b5', name: 'Vehicle Loan', amount: 380, frequency: 'monthly', day: 20, parity: 'odd' }
   ];
 
+  // Set default anchor to a nearby Friday
+  const recentFriday = new Date(today);
+  recentFriday.setDate(today.getDate() - (today.getDay() >= 5 ? today.getDay() - 5 : today.getDay() + 2));
+  const defaultAnchorISO = recentFriday.toISOString().split('T')[0];
+
   const defaultIncomes = [
-    { id: 'i1', name: 'Paycheck 1', amount: 2250, day: 1, cleared: currentDay > 1 },
-    { id: 'i2', name: 'Paycheck 2', amount: 2250, day: 15, cleared: currentDay > 15 }
+    { id: 'i1', name: 'My Job (Bi-Weekly)', amount: 2200, frequency: 'biweekly', anchorDate: defaultAnchorISO },
+    { id: 'i2', name: "Wife's Job 1 (Bi-Weekly)", amount: 1800, frequency: 'biweekly', anchorDate: defaultAnchorISO },
+    { id: 'i3', name: "Wife's Job 2 (Monthly)", amount: 950, frequency: 'monthly', day: 5 }
   ];
 
   let currentChecking = parseFloat(localStorage.getItem('budget_balance')) || 1200.00;
-  let bills = JSON.parse(localStorage.getItem('budget_bills_v2')) || defaultBills;
-  let incomes = JSON.parse(localStorage.getItem('budget_incomes_v2')) || defaultIncomes;
+  let bills = JSON.parse(localStorage.getItem('budget_bills_v6')) || defaultBills;
+  let incomes = JSON.parse(localStorage.getItem('budget_incomes_v6')) || defaultIncomes;
+  let clearedInstances = JSON.parse(localStorage.getItem('budget_cleared_instances')) || {};
+  let lastActiveMonth = localStorage.getItem('budget_active_month_v6');
+
+  // New month cleanup
+  if (lastActiveMonth && lastActiveMonth !== currentMonthYear) {
+    autoResetCycle();
+  }
+  localStorage.setItem('budget_active_month_v6', currentMonthYear);
 
   document.getElementById('current-balance').value = currentChecking.toFixed(2);
+  document.getElementById('income-anchor-date').value = defaultAnchorISO;
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  document.getElementById('cycle-label').textContent = `Today: ${monthNames[today.getMonth()]} ${today.getDate()}, ${today.getFullYear()} • 30-Day Rolling Timeline`;
+
+  function toggleBillFrequencyInputs() {
+    const freq = document.getElementById('bill-frequency').value;
+    document.getElementById('bill-cycle-parity').style.display = (freq === 'every_other') ? 'block' : 'none';
+  }
+
+  function toggleIncomeFrequencyInputs() {
+    const freq = document.getElementById('income-frequency').value;
+    const biweeklyWrap = document.getElementById('income-biweekly-wrap');
+    const dayInput = document.getElementById('income-day');
+
+    if (freq === 'biweekly') {
+      biweeklyWrap.style.display = 'flex';
+      dayInput.style.display = 'none';
+    } else {
+      biweeklyWrap.style.display = 'none';
+      dayInput.style.display = 'block';
+    }
+  }
 
   function formatCurrency(val) {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val);
   }
 
+  function formatDateStr(d) {
+    return `${monthNames[d.getMonth()].substring(0, 3)} ${d.getDate()}`;
+  }
+
   function saveState() {
     localStorage.setItem('budget_balance', currentChecking.toString());
-    localStorage.setItem('budget_bills_v2', JSON.stringify(bills));
-    localStorage.setItem('budget_incomes_v2', JSON.stringify(incomes));
+    localStorage.setItem('budget_bills_v6', JSON.stringify(bills));
+    localStorage.setItem('budget_incomes_v6', JSON.stringify(incomes));
+    localStorage.setItem('budget_cleared_instances', JSON.stringify(clearedInstances));
+    localStorage.setItem('budget_active_month_v6', currentMonthYear);
+  }
+
+  function autoResetCycle() {
+    clearedInstances = {};
+    saveState();
+  }
+
+  function manualCycleReset() {
+    if (confirm("Reset cleared checkmarks for the current cycle?")) {
+      autoResetCycle();
+      render();
+    }
   }
 
   function updateStartingBalance() {
@@ -459,141 +641,350 @@
     }
   }
 
-  function toggleBill(id) {
-    const item = bills.find(b => b.id === id);
-    if (item) { item.cleared = !item.cleared; saveState(); render(); }
-  }
-
-  function toggleIncome(id) {
-    const item = incomes.find(i => i.id === id);
-    if (item) { item.cleared = !item.cleared; saveState(); render(); }
-  }
-
-  function removeBill(id) {
-    bills = bills.filter(b => b.id !== id);
+  function toggleOccurrence(instanceKey) {
+    clearedInstances[instanceKey] = !clearedInstances[instanceKey];
     saveState();
     render();
   }
 
-  function removeIncome(id) {
-    incomes = incomes.filter(i => i.id !== id);
+  function removeRule(id, isBill) {
+    if (isBill) bills = bills.filter(b => b.id !== id);
+    else incomes = incomes.filter(i => i.id !== id);
     saveState();
     render();
   }
 
-  // Calculate distance in days from current day (in a 30-day cyclical period)
-  function getDaysUntil(targetDay) {
-    let diff = targetDay - currentDay;
-    if (diff < 0) diff += 30;
-    return diff;
+  function handleAddBill() {
+    const name = document.getElementById('bill-name').value.trim();
+    const amount = parseFloat(document.getElementById('bill-amount').value);
+    const frequency = document.getElementById('bill-frequency').value;
+    const day = parseInt(document.getElementById('bill-day').value, 10);
+    const parity = document.getElementById('bill-cycle-parity').value;
+
+    if (!name) { alert("Please enter a bill name."); return; }
+    if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); return; }
+    if (isNaN(day) || day < 1 || day > 31) { alert("Please enter a valid day of month (1-31)."); return; }
+
+    bills.push({
+      id: 'b_' + Date.now(),
+      name,
+      amount,
+      frequency,
+      day,
+      parity
+    });
+
+    document.getElementById('bill-name').value = '';
+    document.getElementById('bill-amount').value = '';
+    document.getElementById('bill-day').value = '';
+    saveState();
+    render();
   }
 
-  function renderRow(item, isBill) {
-    const daysAway = getDaysUntil(item.day);
-    const isDueSoon = !item.cleared && daysAway <= 7;
+  function handleAddIncome() {
+    const name = document.getElementById('income-name').value.trim();
+    const amount = parseFloat(document.getElementById('income-amount').value);
+    const frequency = document.getElementById('income-frequency').value;
+
+    if (!name) { alert("Please enter an income name."); return; }
+    if (isNaN(amount) || amount <= 0) { alert("Please enter a valid amount."); return; }
+
+    let anchorDate = null;
+    let day = null;
+
+    if (frequency === 'biweekly') {
+      anchorDate = document.getElementById('income-anchor-date').value;
+      if (!anchorDate) { alert("Please select an anchor date for your bi-weekly paycheck."); return; }
+    } else {
+      day = parseInt(document.getElementById('income-day').value, 10);
+      if (isNaN(day) || day < 1 || day > 31) { alert("Please enter a deposit day of month (1-31)."); return; }
+    }
+
+    incomes.push({
+      id: 'i_' + Date.now(),
+      name,
+      amount,
+      frequency,
+      anchorDate,
+      day
+    });
+
+    document.getElementById('income-name').value = '';
+    document.getElementById('income-amount').value = '';
+    document.getElementById('income-day').value = '';
+    saveState();
+    render();
+  }
+
+  // Generates timeline occurrences across [today, today + 30 days]
+  function generateOccurrences(ruleList, isBill) {
+    const occurrences = [];
+    const windowEnd = new Date(today);
+    windowEnd.setDate(today.getDate() + 30);
+
+    ruleList.forEach(rule => {
+      if (rule.frequency === 'biweekly') {
+        const anchor = new Date(rule.anchorDate + 'T00:00:00');
+        const msPer14Days = 14 * 24 * 60 * 60 * 1000;
+        
+        // Find first occurrence on or after today - 14 days to capture cleared/current paychecks
+        const diffDays = Math.floor((today - anchor) / (24 * 60 * 60 * 1000));
+        const periodsBack = Math.floor(diffDays / 14);
+        let curr = new Date(anchor.getTime() + periodsBack * msPer14Days);
+
+        while (curr <= windowEnd) {
+          if (curr >= new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)) {
+            const dateISO = curr.toISOString().split('T')[0];
+            const instanceKey = `${rule.id}_${dateISO}`;
+            const diffFromToday = Math.round((curr - today) / (24 * 60 * 60 * 1000));
+
+            occurrences.push({
+              ruleId: rule.id,
+              instanceKey,
+              name: rule.name,
+              amount: rule.amount,
+              date: new Date(curr),
+              dateISO,
+              diffFromToday,
+              cleared: !!clearedInstances[instanceKey],
+              frequencyLabel: 'Bi-Weekly',
+              isBill,
+              isOffCycle: false
+            });
+          }
+          curr = new Date(curr.getTime() + msPer14Days);
+        }
+      } else if (rule.frequency === 'monthly') {
+        // Evaluate in current month and next month
+        for (let mOffset = 0; mOffset <= 1; mOffset++) {
+          const targetYear = today.getFullYear();
+          const targetMonth = today.getMonth() + mOffset;
+          const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+          const actualDay = Math.min(rule.day, daysInMonth);
+          const targetDate = new Date(targetYear, targetMonth, actualDay);
+
+          const diffFromToday = Math.round((targetDate - today) / (24 * 60 * 60 * 1000));
+          if (diffFromToday >= -7 && diffFromToday <= 30) {
+            const dateISO = targetDate.toISOString().split('T')[0];
+            const instanceKey = `${rule.id}_${dateISO}`;
+
+            occurrences.push({
+              ruleId: rule.id,
+              instanceKey,
+              name: rule.name,
+              amount: rule.amount,
+              date: targetDate,
+              dateISO,
+              diffFromToday,
+              cleared: !!clearedInstances[instanceKey],
+              frequencyLabel: 'Monthly',
+              isBill,
+              isOffCycle: false
+            });
+          }
+        }
+      } else if (rule.frequency === 'every_other') {
+        for (let mOffset = 0; mOffset <= 1; mOffset++) {
+          const targetMonthNum = today.getMonth() + 1 + mOffset; // 1-12
+          const isOdd = (targetMonthNum % 2 !== 0);
+          const applies = (rule.parity === 'odd' && isOdd) || (rule.parity === 'even' && !isOdd);
+
+          const targetYear = today.getFullYear();
+          const targetMonth = today.getMonth() + mOffset;
+          const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+          const actualDay = Math.min(rule.day, daysInMonth);
+          const targetDate = new Date(targetYear, targetMonth, actualDay);
+
+          const diffFromToday = Math.round((targetDate - today) / (24 * 60 * 60 * 1000));
+          if (diffFromToday >= -7 && diffFromToday <= 30) {
+            const dateISO = targetDate.toISOString().split('T')[0];
+            const instanceKey = `${rule.id}_${dateISO}`;
+
+            occurrences.push({
+              ruleId: rule.id,
+              instanceKey,
+              name: rule.name,
+              amount: rule.amount,
+              date: targetDate,
+              dateISO,
+              diffFromToday,
+              cleared: !!clearedInstances[instanceKey],
+              frequencyLabel: 'Every Other Mo',
+              isBill,
+              isOffCycle: !applies
+            });
+          }
+        }
+      } else if (rule.frequency === 'once') {
+        const targetYear = today.getFullYear();
+        const targetMonth = today.getMonth();
+        const daysInMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+        const actualDay = Math.min(rule.day, daysInMonth);
+        const targetDate = new Date(targetYear, targetMonth, actualDay);
+
+        const diffFromToday = Math.round((targetDate - today) / (24 * 60 * 60 * 1000));
+        const dateISO = targetDate.toISOString().split('T')[0];
+        const instanceKey = `${rule.id}_${dateISO}`;
+
+        occurrences.push({
+          ruleId: rule.id,
+          instanceKey,
+          name: rule.name,
+          amount: rule.amount,
+          date: targetDate,
+          dateISO,
+          diffFromToday,
+          cleared: !!clearedInstances[instanceKey],
+          frequencyLabel: 'One-Time',
+          isBill,
+          isOffCycle: false
+        });
+      }
+    });
+
+    // Sort chronologically
+    return occurrences.sort((a, b) => a.date - b.date);
+  }
+
+  function renderRow(occ) {
+    const isDueSoon = !occ.cleared && !occ.isOffCycle && occ.diffFromToday >= 0 && occ.diffFromToday <= 7;
+    const isPast = occ.diffFromToday < 0;
+
+    let timeBadge = '';
+    if (isDueSoon) {
+      timeBadge = `<span class="badge-urgent">In ${occ.diffFromToday}d (${formatDateStr(occ.date)})</span>`;
+    } else if (isPast) {
+      timeBadge = `<span style="font-size:0.7rem; color:var(--text-muted);">${formatDateStr(occ.date)} (Past)</span>`;
+    } else {
+      timeBadge = `<span style="font-size:0.75rem; color:var(--text-muted);">${formatDateStr(occ.date)}</span>`;
+    }
 
     return `
-      <li class="item-row ${item.cleared ? 'cleared' : ''} ${isDueSoon ? 'due-soon' : ''}">
+      <li class="item-row ${occ.cleared ? 'cleared' : ''} ${isDueSoon ? 'due-soon' : ''} ${occ.isOffCycle ? 'off-cycle' : ''}">
         <div class="item-info">
-          <input type="checkbox" class="item-checkbox" ${item.cleared ? 'checked' : ''} 
-                 onclick="${isBill ? `toggleBill('${item.id}')` : `toggleIncome('${item.id}')`}">
+          <input type="checkbox" class="item-checkbox" ${occ.cleared ? 'checked' : ''} 
+                 ${occ.isOffCycle ? 'disabled' : ''}
+                 onchange="toggleOccurrence('${occ.instanceKey}')">
           <div class="item-meta">
             <span class="item-name">
-              ${item.name}
-              ${isDueSoon ? '<span class="badge-urgent">Due in ' + daysAway + 'd</span>' : ''}
+              ${occ.name}
+              <span class="${occ.isOffCycle ? 'badge-offcycle' : 'badge-frequency'}">${occ.frequencyLabel}</span>
+              ${timeBadge}
             </span>
-            <span class="item-tag">Day ${item.day} of month • ${item.cleared ? 'Cleared' : 'Pending'}</span>
+            <span class="item-tag">${occ.isOffCycle ? 'Off-Cycle (Next month)' : (occ.cleared ? 'Cleared' : 'Scheduled')}</span>
           </div>
         </div>
         <div class="item-actions">
-          <span class="item-amount" style="color: ${isBill ? 'var(--accent-red)' : 'var(--accent-blue)'}">
-            ${isBill ? '-' : '+'}${formatCurrency(item.amount)}
+          <span class="item-amount" style="color: ${occ.isBill ? 'var(--accent-red)' : 'var(--accent-blue)'}">
+            ${occ.isBill ? '-' : '+'}${formatCurrency(occ.amount)}
           </span>
-          <button class="btn-delete" onclick="${isBill ? `removeBill('${item.id}')` : `removeIncome('${item.id}')`}" title="Delete">&times;</button>
+          <button class="btn-delete" onclick="removeRule('${occ.ruleId}', ${occ.isBill})" title="Delete rule">&times;</button>
         </div>
       </li>
     `;
   }
 
   function render() {
-    // Partition bills
+    const allBills = generateOccurrences(bills, true);
+    const allIncomes = generateOccurrences(incomes, false);
+
+    // Filter into sections
     const dueSoonBills = [];
     const upcomingBills = [];
     const clearedBills = [];
+    const offCycleBills = [];
 
-    bills.forEach(b => {
-      if (b.cleared) {
-        clearedBills.push(b);
-      } else {
-        const daysAway = getDaysUntil(b.day);
-        if (daysAway <= 7) dueSoonBills.push(b);
-        else upcomingBills.push(b);
-      }
+    allBills.forEach(b => {
+      if (b.isOffCycle) offCycleBills.push(b);
+      else if (b.cleared) clearedBills.push(b);
+      else if (b.diffFromToday >= 0 && b.diffFromToday <= 7) dueSoonBills.push(b);
+      else if (b.diffFromToday > 7) upcomingBills.push(b);
     });
 
-    // Partition incomes
-    const pendingIncomes = incomes.filter(i => !i.cleared);
-    const clearedIncomes = incomes.filter(i => i.cleared);
+    const dueSoonIncomes = [];
+    const pendingIncomes = [];
+    const clearedIncomes = [];
 
-    // Render lists
+    allIncomes.forEach(i => {
+      if (i.cleared) clearedIncomes.push(i);
+      else if (i.diffFromToday >= 0 && i.diffFromToday <= 7) dueSoonIncomes.push(i);
+      else if (i.diffFromToday > 7) pendingIncomes.push(i);
+    });
+
     document.getElementById('bills-due-soon').innerHTML = dueSoonBills.length 
-      ? dueSoonBills.map(b => renderRow(b, true)).join('') 
-      : '<li class="empty-state">No bills due in next 7 days.</li>';
+      ? dueSoonBills.map(renderRow).join('') 
+      : '<li class="empty-state">No bills due in the next 7 days.</li>';
 
     document.getElementById('bills-upcoming').innerHTML = upcomingBills.length 
-      ? upcomingBills.map(b => renderRow(b, true)).join('') 
-      : '<li class="empty-state">No later bills remaining.</li>';
+      ? upcomingBills.map(renderRow).join('') 
+      : '<li class="empty-state">No later bills remaining in 30d window.</li>';
 
     document.getElementById('bills-cleared').innerHTML = clearedBills.length 
-      ? clearedBills.map(b => renderRow(b, true)).join('') 
-      : '<li class="empty-state">No bills marked as cleared yet.</li>';
+      ? clearedBills.map(renderRow).join('') 
+      : '<li class="empty-state">No bills cleared yet.</li>';
+
+    document.getElementById('bills-offcycle').innerHTML = offCycleBills.length 
+      ? offCycleBills.map(renderRow).join('') 
+      : '<li class="empty-state">No off-cycle bills detected.</li>';
+
+    document.getElementById('income-due-soon').innerHTML = dueSoonIncomes.length 
+      ? dueSoonIncomes.map(renderRow).join('') 
+      : '<li class="empty-state">No paychecks arriving in next 7 days.</li>';
 
     document.getElementById('income-pending').innerHTML = pendingIncomes.length 
-      ? pendingIncomes.map(i => renderRow(i, false)).join('') 
-      : '<li class="empty-state">All scheduled paychecks cleared.</li>';
+      ? pendingIncomes.map(renderRow).join('') 
+      : '<li class="empty-state">No later paychecks in 30d window.</li>';
 
     document.getElementById('income-cleared').innerHTML = clearedIncomes.length 
-      ? clearedIncomes.map(i => renderRow(i, false)).join('') 
+      ? clearedIncomes.map(renderRow).join('') 
       : '<li class="empty-state">No paychecks cleared yet.</li>';
 
-    // Summary calculations
-    const sumDueSoon = dueSoonBills.reduce((acc, b) => acc + b.amount, 0);
-    const sumUnclearedBills = bills.filter(b => !b.cleared).reduce((acc, b) => acc + b.amount, 0);
-    const sumUnclearedIncome = incomes.filter(i => !i.cleared).reduce((acc, i) => acc + i.amount, 0);
-    const projectedFinal = currentChecking + sumUnclearedIncome - sumUnclearedBills;
+    // Summary calculations (forward 30 days)
+    const activeFutureBills = allBills.filter(b => !b.cleared && !b.isOffCycle && b.diffFromToday >= 0 && b.diffFromToday <= 30);
+    const activeFutureIncome = allIncomes.filter(i => !i.cleared && !i.isOffCycle && i.diffFromToday >= 0 && i.diffFromToday <= 30);
 
-    document.getElementById('kpi-due-soon').textContent = formatCurrency(sumDueSoon);
+    const sumDueSoonBills = dueSoonBills.reduce((acc, b) => acc + b.amount, 0);
+    const sumTotalOutgoing = activeFutureBills.reduce((acc, b) => acc + b.amount, 0);
+    const sumTotalInflow = activeFutureIncome.reduce((acc, i) => acc + i.amount, 0);
+    const projectedFinal = currentChecking + sumTotalInflow - sumTotalOutgoing;
+
+    document.getElementById('kpi-due-soon').textContent = formatCurrency(sumDueSoonBills);
     document.getElementById('kpi-due-soon-count').textContent = `${dueSoonBills.length} bill(s) in next 7 days`;
-
-    document.getElementById('kpi-unpaid-bills').textContent = formatCurrency(sumUnclearedBills);
-    document.getElementById('kpi-unpaid-income').textContent = formatCurrency(sumUnclearedIncome);
+    document.getElementById('kpi-unpaid-bills').textContent = formatCurrency(sumTotalOutgoing);
+    document.getElementById('kpi-unpaid-income').textContent = formatCurrency(sumTotalInflow);
 
     const endEl = document.getElementById('kpi-projected-end');
     endEl.textContent = formatCurrency(projectedFinal);
     endEl.className = projectedFinal < 0 ? 'kpi-value negative' : 'kpi-value positive';
 
-    // Trajectory Deficit Simulation (Day by Day for next 30 days)
+    // Chronological Daily Cash-Flow Timeline Simulation
     let runningBalance = currentChecking;
     let lowestBalance = runningBalance;
     let deficitDay = null;
 
-    for (let offset = 0; offset <= 30; offset++) {
-      const simDay = ((currentDay + offset - 1) % 31) + 1;
+    for (let dayOffset = 0; dayOffset <= 30; dayOffset++) {
+      const simDate = new Date(today);
+      simDate.setDate(today.getDate() + dayOffset);
+      const simISO = simDate.toISOString().split('T')[0];
 
-      // Add incomes on simDay
-      incomes.forEach(i => {
-        if (!i.cleared && i.day === simDay) runningBalance += i.amount;
+      // Add deposits on this date
+      activeFutureIncome.forEach(i => {
+        if (i.dateISO === simISO) runningBalance += i.amount;
       });
 
-      // Subtract bills on simDay
-      bills.forEach(b => {
-        if (!b.cleared && b.day === simDay) runningBalance -= b.amount;
+      // Subtract bills on this date
+      activeFutureBills.forEach(b => {
+        if (b.dateISO === simISO) runningBalance -= b.amount;
       });
 
       if (runningBalance < lowestBalance) {
         lowestBalance = runningBalance;
         if (runningBalance < 0 && deficitDay === null) {
-          deficitDay = { offset, amount: Math.abs(runningBalance) };
+          deficitDay = {
+            daysAway: dayOffset,
+            dateStr: formatDateStr(simDate),
+            amount: Math.abs(runningBalance)
+          };
         }
       }
     }
@@ -603,45 +994,16 @@
 
     if (deficitDay !== null) {
       banner.className = 'alert-banner deficit';
-      bannerText.innerHTML = `⚠️ <strong>Cash Deficit Warning:</strong> Based on current timing, your account is projected to dip negative by <strong>-${formatCurrency(deficitDay.amount)}</strong> in approximately <strong>${deficitDay.offset} days</strong> before your next deposit arrives.`;
+      bannerText.innerHTML = `⚠️ <strong>Cash Deficit Warning:</strong> Account projected to dip negative by <strong>-${formatCurrency(deficitDay.amount)}</strong> on <strong>${deficitDay.dateStr}</strong> (in ~${deficitDay.daysAway} days) before the next deposit clears.`;
     } else {
       banner.className = 'alert-banner safe';
       bannerText.innerHTML = `✅ <strong>Trajectory Stable:</strong> No cash crunch detected. Lowest projected balance in next 30 days is <strong>${formatCurrency(lowestBalance)}</strong>.`;
     }
   }
 
-  // Form Submissions
-  document.getElementById('bill-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('bill-name').value.trim();
-    const amount = parseFloat(document.getElementById('bill-amount').value);
-    const day = parseInt(document.getElementById('bill-day').value, 10);
-    if (!name || isNaN(amount) || isNaN(day)) return;
-
-    bills.push({ id: 'b_' + Date.now(), name, amount, day, cleared: false });
-    document.getElementById('bill-name').value = '';
-    document.getElementById('bill-amount').value = '';
-    document.getElementById('bill-day').value = '';
-    saveState();
-    render();
-  });
-
-  document.getElementById('income-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    const name = document.getElementById('income-name').value.trim();
-    const amount = parseFloat(document.getElementById('income-amount').value);
-    const day = parseInt(document.getElementById('income-day').value, 10);
-    if (!name || isNaN(amount) || isNaN(day)) return;
-
-    incomes.push({ id: 'i_' + Date.now(), name, amount, day, cleared: false });
-    document.getElementById('income-name').value = '';
-    document.getElementById('income-amount').value = '';
-    document.getElementById('income-day').value = '';
-    saveState();
-    render();
-  });
-
-  // Initial load
+  // Init
+  toggleBillFrequencyInputs();
+  toggleIncomeFrequencyInputs();
   render();
 </script>
 </body>
